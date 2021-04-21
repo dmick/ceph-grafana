@@ -23,9 +23,7 @@ build : fetch_dashboards
 	echo "Creating base container"
 	$(eval CONTAINER := $(shell buildah from ${IMAGE}))
 	# Using upstream grafana build
-	wget https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
-	#wget localhost:8000/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
-	#cp grafana-${GRAFANA_VERSION}.${ARCH}.rpm ${mountpoint}/tmp/.
+	curl -O https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
 	buildah copy $(CONTAINER) grafana-${GRAFANA_VERSION}.${ARCH}.rpm /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
 	buildah run $(CONTAINER) ${PKGMGR} install -y --setopt install_weak_deps=false --setopt=tsflags=nodocs /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
 	buildah run $(CONTAINER) ${PKGMGR} clean all
@@ -75,14 +73,14 @@ providers: \\n\
 
 
 fetch_dashboards: clean
-	wget -O - https://api.github.com/repos/ceph/ceph/contents/${DASHBOARD_DIR}?ref=${ceph_version} | jq '.[].download_url' > dashboards
+	curl "https://api.github.com/repos/ceph/ceph/contents/${DASHBOARD_DIR}?ref=${ceph_version}" | jq '.[].download_url' > dashboards
 
 	# drop quotes from the list and pick out only json files
 	sed -i 's/\"//g' dashboards
 	sed -i '/\.json/!d' dashboards
 	mkdir jsonfiles 
 	while read -r line; do \
-		wget "$$line" -P jsonfiles; \
+		(cd jsonfiles; curl -O "$$line"); \
 	done < dashboards
 
 clean :
