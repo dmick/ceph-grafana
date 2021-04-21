@@ -22,6 +22,7 @@ ceph_version := "master"
 build : fetch_dashboards
 	echo "Creating base container"
 	$(eval CONTAINER := $(shell buildah from ${IMAGE}))
+	echo "Container: $(CONTAINER)"
 	# Using upstream grafana build
 	curl -O https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
 	buildah copy $(CONTAINER) grafana-${GRAFANA_VERSION}.${ARCH}.rpm /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
