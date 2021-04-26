@@ -7,11 +7,9 @@ DASHBOARD_PROVISIONING := "ceph-dashboard.yml"
 IMAGE := "docker.io/centos:8"
 VERSION := "${IMAGE: -1}"
 PKGMGR := "dnf"
-ifndef ARCH
-    ARCH := x86_64
-endif
-ifeq "ARCH" "arm64"
-    ARCH := aarch64
+ARCH ?= x86_64
+ifeq "$(ARCH)" "arm64"
+    override ARCH := aarch64
 endif
 # CONTAINER := $(shell buildah from ${IMAGE})
 GF_CONFIG := "/etc/grafana/grafana.ini"
@@ -24,9 +22,9 @@ build : fetch_dashboards
 	$(eval CONTAINER := $(shell sudo buildah from ${IMAGE}))
 	echo "Container: $(CONTAINER)"
 	# Using upstream grafana build
-	curl -O https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
-	sudo buildah copy $(CONTAINER) grafana-${GRAFANA_VERSION}.${ARCH}.rpm /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
-	sudo buildah run $(CONTAINER) ${PKGMGR} install -y --setopt install_weak_deps=false --setopt=tsflags=nodocs /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
+	curl -O https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.$(ARCH).rpm
+	sudo buildah copy $(CONTAINER) grafana-${GRAFANA_VERSION}.$(ARCH).rpm /tmp/grafana-${GRAFANA_VERSION}.${ARCH}.rpm
+	sudo buildah run $(CONTAINER) ${PKGMGR} install -y --setopt install_weak_deps=false --setopt=tsflags=nodocs /tmp/grafana-${GRAFANA_VERSION}.$(ARCH).rpm
 	sudo buildah run $(CONTAINER) ${PKGMGR} clean all
 	sudo buildah run $(CONTAINER) rm -f /tmp/grafana*.rpm
 	sudo buildah run $(CONTAINER) grafana-cli plugins install grafana-piechart-panel ${PIECHART_VERSION}
